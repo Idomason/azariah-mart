@@ -6,9 +6,7 @@
     "dev": "tsx -w src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "db:generate": "drizzle-kit generate --out ./drizzle",
-    "db:migrate": "drizzle-kit migrate",
-    "db:rollback": "drizzle-kit rollback"
+    "db:push": "drizzle-kit push"
   },
   "keywords": [],
   "author": "",
