@@ -1,0 +1,96 @@
+import type { Request, Response } from "express";
+import { getEnv } from "../lib/env";
+import { verifyWebhook } from "@clerk/express/webhooks";
+import { parseRole } from "./roles";
+import { db } from "../databases";
+import { users } from "../databases/schema";
+import { eq } from "drizzle-orm";
+
+export async function clerkWebhookHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const env = getEnv();
+
+  //   Webhook verification is crucial for security. If the secret is not set, we should not process the webhook as we can't trust incoming requests without it.
+  if (!env.CLERK_WEBHOOK_SECRET) {
+    console.warn(
+      "CLERK_WEBHOOK_SECRET is not set. Skipping webhook verification.",
+    );
+    res.status(503).send("Webhook secret not configured");
+    return;
+  }
+
+  try {
+    // Clerk's verifier expects a web request with the raw body, so we need to ensure that the raw body is available. Express may give buffer or string. This is why we use express.raw() middleware for this route in index.ts.
+    const payload =
+      req.body instanceof Buffer
+        ? req.body.toString("utf-8")
+        : String(req.body);
+
+    const request = new Request("http://internal/webhook/clerk", {
+      method: "POST",
+      headers: new Headers(req.headers as HeadersInit),
+      body: payload,
+    });
+
+    // Throws error if signature is wrong or body tempered with. Always wrap in try/catch to handle invalid webhooks gracefully.
+    const event = await verifyWebhook(request, {
+      signingSecret: env.CLERK_WEBHOOK_SECRET,
+    });
+
+    if (event.type === "user.created" || event.type === "user.updated") {
+      // Handle the event (e.g., user.created, user.updated, etc.)
+      const user = event.data;
+
+      const email =
+        user.email_addresses?.find(
+          (email) => email.id === user.primary_email_address_id,
+        )?.email_address ?? user.email_addresses?.[0]?.email_address;
+
+      const phone =
+        user.phone_numbers?.find(
+          (phone) => phone.id === user.primary_phone_number_id,
+        )?.phone_number ?? user.phone_numbers?.[0]?.phone_number;
+
+      const displayName =
+        [user.first_name, user.last_name].filter(Boolean).join(" ") ||
+        user.username ||
+        "Unknown User";
+
+      const role = parseRole(user.public_metadata?.role);
+
+      await db
+        .insert(users)
+        .values({ clerkUserId: user.id, email, phone, displayName, role })
+        .onConflictDoUpdate({
+          target: users.clerkUserId,
+          set: { email, phone, displayName, role, updatedAt: new Date() },
+        });
+
+      console.log("Received Clerk webhook event:", event);
+    }
+
+    if (event.type === "user.deleted") {
+      const user = event.data;
+
+      if (user && user.id) {
+        await db.delete(users).where(eq(users.clerkUserId, user.id));
+        console.log(
+          "Deleted user from database due to Clerk webhook event:",
+          event,
+        );
+
+        res.status(200).json({ message: "User deleted", ok: true });
+      }
+    }
+  } catch (error) {
+    // Bad signature, malformed payload, DB error - do not leak details to the client, but log for debugging.
+    console.error("Error processing Clerk webhook:", error);
+    res.status(400).send("Invalid webhook");
+    return;
+  }
+
+  // Respond to acknowledge receipt of the webhook
+  res.status(200).send("Webhook received");
+}
