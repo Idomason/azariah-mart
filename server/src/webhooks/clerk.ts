@@ -34,8 +34,10 @@ export async function clerkWebhookHandler(
       body: payload,
     });
 
+    req = request as unknown as Request; // TypeScript hack to treat it as Express Request for the verifier
+
     // Throws error if signature is wrong or body tempered with. Always wrap in try/catch to handle invalid webhooks gracefully.
-    const evt = await verifyWebhook(request, {
+    const evt = await verifyWebhook(req, {
       signingSecret: env.CLERK_WEBHOOK_SECRET,
     });
 
