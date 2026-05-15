@@ -1,5 +1,7 @@
 import "dotenv/config";
 import cors from "cors";
+import fs from "node:fs";
+import path from "node:path";
 import express, { Request, Response } from "express";
 import { clerkMiddleware } from "@clerk/express";
 import { getEnv } from "./lib/env";
@@ -22,9 +24,26 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(clerkMiddleware());
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("<h1>Hello, Azariah!</h1>");
-});
+const publicDir = path.join(process.cwd(), "public");
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+
+  app.get("*", (req: Request, res: Response, next: Function) => {
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      next();
+      return;
+    }
+
+    if (req.path.startsWith("/api") || req.path.startsWith("/webhooks")) {
+      next();
+      return;
+    }
+
+    res.sendFile(path.join(publicDir, "index.html"), (err) => next(err));
+  });
+} else {
+  console.warn("Public directory not found. Static files will not be served.");
+}
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} in ${env.NODE_ENV} mode.`);

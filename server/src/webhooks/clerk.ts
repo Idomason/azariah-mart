@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { getEnv } from "../lib/env";
 import { verifyWebhook } from "@clerk/express/webhooks";
-import { parseRole } from "./roles";
+import { parseRole } from "../lib/roles";
 import { db } from "../databases";
 import { users } from "../databases/schema";
 import { eq } from "drizzle-orm";
@@ -23,25 +23,20 @@ export async function clerkWebhookHandler(
 
   try {
     // Clerk's verifier expects a web request with the raw body, so we need to ensure that the raw body is available. Express may give buffer or string. This is why we use express.raw() middleware for this route in index.ts.
-    const payload =
+
+    req.body =
       req.body instanceof Buffer
         ? req.body.toString("utf-8")
         : String(req.body);
 
-    const request = new Request("http://internal/webhook/clerk", {
-      method: "POST",
-      headers: new Headers(req.headers as HeadersInit),
-      body: payload,
-    });
-
     // Throws error if signature is wrong or body tempered with. Always wrap in try/catch to handle invalid webhooks gracefully.
-    const event = await verifyWebhook(request, {
+    const evt = await verifyWebhook(req, {
       signingSecret: env.CLERK_WEBHOOK_SECRET,
     });
 
-    if (event.type === "user.created" || event.type === "user.updated") {
-      // Handle the event (e.g., user.created, user.updated, etc.)
-      const user = event.data;
+    if (evt.type === "user.created" || evt.type === "user.updated") {
+      // Handle the evt (e.g., user.created, user.updated, etc.)
+      const user = evt.data;
 
       const email =
         user.email_addresses?.find(
@@ -68,17 +63,17 @@ export async function clerkWebhookHandler(
           set: { email, phone, displayName, role, updatedAt: new Date() },
         });
 
-      console.log("Received Clerk webhook event:", event);
+      console.log("Received Clerk webhook event:", evt);
     }
 
-    if (event.type === "user.deleted") {
-      const user = event.data;
+    if (evt.type === "user.deleted") {
+      const user = evt.data;
 
       if (user && user.id) {
         await db.delete(users).where(eq(users.clerkUserId, user.id));
         console.log(
           "Deleted user from database due to Clerk webhook event:",
-          event,
+          evt,
         );
 
         res.status(200).json({ message: "User deleted", ok: true });
