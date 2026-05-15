@@ -6,6 +6,9 @@ FROM node:22-bookworm-slim AS client-build
 WORKDIR /app/client
 COPY client/ ./
 
+# Copy .npmrc to allow build scripts
+COPY .npmrc ./
+
 # Empty = browser calls /api on the same host as the page (same domain as Express).
 ENV VITE_API_URL=
 
@@ -13,13 +16,11 @@ ENV VITE_API_URL=
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 
-# Allow build scripts
-ENV PNPM_ALLOW_SCRIPTS=true
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile --allow-scripts && pnpm run build
+RUN pnpm install --frozen-lockfile && pnpm run build
 
 # --- Stage 2: compile the API (TypeScript → JavaScript) ---
 # Produces dist/ with index.js and the rest of the server bundle.
@@ -27,13 +28,13 @@ FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
 COPY server/ ./
 
-# Allow build scripts
-ENV PNPM_ALLOW_SCRIPTS=true
+# Copy .npmrc
+COPY .npmrc ./
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile --allow-scripts && pnpm run build
+RUN pnpm install --frozen-lockfile && pnpm run build
 
 # --- Stage 3: runtime image (only prod deps + built assets) ---
 # Express serves API routes and static files from public/ (the Vite build from stage 1).
@@ -43,13 +44,13 @@ ENV NODE_ENV=production
 
 COPY server/package.json server/pnpm-lock.yaml ./
 
-# Allow build scripts
-ENV PNPM_ALLOW_SCRIPTS=true
+# Copy .npmrc to allow build scripts
+COPY .npmrc ./
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --prod --allow-scripts
+RUN pnpm install --prod && pnpm cache clean --force
 
 
 COPY --from=server-build /app/dist ./dist
