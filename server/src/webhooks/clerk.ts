@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { getEnv } from "../lib/env";
 import { verifyWebhook } from "@clerk/express/webhooks";
-import { parseRole } from "../lib/roles";
+import { parseRole } from "./roles";
 import { db } from "../databases";
 import { users } from "../databases/schema";
 import { eq } from "drizzle-orm";
@@ -23,14 +23,19 @@ export async function clerkWebhookHandler(
 
   try {
     // Clerk's verifier expects a web request with the raw body, so we need to ensure that the raw body is available. Express may give buffer or string. This is why we use express.raw() middleware for this route in index.ts.
-
-    req.body =
+    const payload =
       req.body instanceof Buffer
         ? req.body.toString("utf-8")
         : String(req.body);
 
+    const request = new Request("http://internal/webhook/clerk", {
+      method: "POST",
+      headers: new Headers(req.headers as HeadersInit),
+      body: payload,
+    });
+
     // Throws error if signature is wrong or body tempered with. Always wrap in try/catch to handle invalid webhooks gracefully.
-    const evt = await verifyWebhook(req, {
+    const evt = await verifyWebhook(request, {
       signingSecret: env.CLERK_WEBHOOK_SECRET,
     });
 
