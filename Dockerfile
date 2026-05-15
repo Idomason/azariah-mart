@@ -40,7 +40,7 @@ COPY server/package.json server/pnpm-lock.yaml ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --prod && pnpm cache clean --force
+RUN pnpm install --prod --only-built-dependencies && pnpm cache clean --force
 
 COPY --from=server-build /app/dist ./dist
 COPY --from=client-build /app/client/dist ./public
