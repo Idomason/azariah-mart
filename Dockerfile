@@ -6,8 +6,8 @@ FROM node:22-bookworm-slim AS client-build
 WORKDIR /app/client
 COPY client/ ./
 
-# Copy .npmrc to allow build scripts
-COPY .npmrc ./
+# Create .npmrc directly in the container to ensure scripts are allowed
+RUN echo "enable-pre-post-scripts=true" > .npmrc
 
 # Empty = browser calls /api on the same host as the page (same domain as Express).
 ENV VITE_API_URL=
@@ -28,8 +28,8 @@ FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
 COPY server/ ./
 
-# Copy .npmrc
-COPY .npmrc ./
+# Create .npmrc directly in the container to ensure scripts are allowed
+RUN echo "enable-pre-post-scripts=true" > .npmrc
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
@@ -44,8 +44,9 @@ ENV NODE_ENV=production
 
 COPY server/package.json server/pnpm-lock.yaml ./
 
-# Copy .npmrc to allow build scripts
-COPY .npmrc ./
+
+# Create .npmrc directly in the container to ensure scripts are allowed
+RUN echo "enable-pre-post-scripts=true" > .npmrc
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
