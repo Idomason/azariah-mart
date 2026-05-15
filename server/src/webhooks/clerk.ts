@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { getEnv } from "../lib/env";
 import { verifyWebhook } from "@clerk/express/webhooks";
-import { parseRole } from "./roles";
+import { parseRole } from "../lib/roles";
 import { db } from "../databases";
 import { users } from "../databases/schema";
 import { eq } from "drizzle-orm";
