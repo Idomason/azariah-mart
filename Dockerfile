@@ -16,10 +16,9 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --no-audit --no-fund \
-  && pnpm run build
+RUN pnpm install && pnpm run build
 
-  # --- Stage 2: compile the API (TypeScript → JavaScript) ---
+# --- Stage 2: compile the API (TypeScript → JavaScript) ---
 # Produces dist/ with index.js and the rest of the server bundle.
 FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
@@ -28,8 +27,7 @@ COPY server/ ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --no-audit --no-fund \
-  && pnpm run build
+RUN pnpm install && pnpm run build
 
 # --- Stage 3: runtime image (only prod deps + built assets) ---
 # Express serves API routes and static files from public/ (the Vite build from stage 1).
@@ -42,7 +40,7 @@ COPY server/pnpm-lock.yaml ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --omit=dev --no-audit --no-fund && pnpm cache clean --force
+RUN pnpm install --prod && pnpm cache clean --force
 
 COPY --from=server-build /app/dist ./dist
 COPY --from=client-build /app/client/dist ./public
