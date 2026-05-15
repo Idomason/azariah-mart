@@ -42,7 +42,7 @@ COPY server/package.json server/pnpm-lock.yaml ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN echo "only-built-dependencies=@clerk/shared,@sentry-internal/node-cpu-profiler" > .npmrc
+RUN pnpm config set never-run-compiled-binaries false
 RUN pnpm install --prod && pnpm cache clean --force
 
 
