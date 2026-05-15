@@ -5,11 +5,14 @@
 FROM node:22-bookworm-slim AS client-build
 WORKDIR /app/client
 COPY client/ ./
+
 # Empty = browser calls /api on the same host as the page (same domain as Express).
 ENV VITE_API_URL=
+
 # Public Clerk key (safe to pass as build-arg; it is embedded in client JS anyway)
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+
 # Install pnpm globally using npm
 RUN npm install -g pnpm
 RUN pnpm install --no-audit --no-fund \
@@ -20,6 +23,9 @@ RUN pnpm install --no-audit --no-fund \
 FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
 COPY server/ ./
+
+# Install pnpm globally using npm
+RUN npm install -g pnpm
 RUN pnpm install --no-audit --no-fund \
   && pnpm run build
 
@@ -29,7 +35,10 @@ FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY server/pnpm-lock.yaml server/pnpm-lock.yaml ./
+COPY server/pnpm-lock.yaml ./
+
+# Install pnpm globally using npm
+RUN npm install -g pnpm
 RUN pnpm install --omit=dev --no-audit --no-fund && pnpm cache clean --force
 
 COPY --from=server-build /app/dist ./dist
