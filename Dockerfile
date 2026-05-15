@@ -17,7 +17,7 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile && pnpm run build
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds && pnpm run build
 
 # --- Stage 2: compile the API (TypeScript → JavaScript) ---
 # Produces dist/ with index.js and the rest of the server bundle.
@@ -28,7 +28,7 @@ COPY server/ ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile && pnpm run build
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds && pnpm run build
 
 # --- Stage 3: runtime image (only prod deps + built assets) ---
 # Express serves API routes and static files from public/ (the Vite build from stage 1).
@@ -42,7 +42,7 @@ COPY server/package.json server/pnpm-lock.yaml ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --prod && pnpm cache clean --force
+RUN pnpm install --prod --dangerously-allow-all-builds && pnpm cache clean --force
 
 
 COPY --from=server-build /app/dist ./dist
