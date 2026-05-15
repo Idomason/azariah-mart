@@ -10,6 +10,8 @@ ENV VITE_API_URL=
 # Public Clerk key (safe to pass as build-arg; it is embedded in client JS anyway)
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
+# Install pnpm globally using npm
+RUN npm install -g pnpm
 RUN pnpm install --no-audit --no-fund \
   && pnpm run build
 
