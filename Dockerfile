@@ -13,8 +13,9 @@ ENV VITE_API_URL=
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 
-# Install pnpm globally using npm
-RUN npm install -g pnpm
+# Use Corepack instead of npm install -g pnpm
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
 RUN pnpm install --no-audit --no-fund \
   && pnpm run build
 
@@ -24,8 +25,9 @@ FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
 COPY server/ ./
 
-# Install pnpm globally using npm
-RUN npm install -g pnpm
+# Use Corepack instead of npm install -g pnpm
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
 RUN pnpm install --no-audit --no-fund \
   && pnpm run build
 
@@ -37,8 +39,9 @@ ENV NODE_ENV=production
 
 COPY server/pnpm-lock.yaml ./
 
-# Install pnpm globally using npm
-RUN npm install -g pnpm
+# Use Corepack instead of npm install -g pnpm
+RUN corepack enable
+RUN corepack prepare pnpm@latest --activate
 RUN pnpm install --omit=dev --no-audit --no-fund && pnpm cache clean --force
 
 COPY --from=server-build /app/dist ./dist
