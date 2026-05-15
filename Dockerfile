@@ -16,9 +16,6 @@ ENV VITE_API_URL=
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 
-# Explicitly allow scripts via environment variable
-ENV PNPM_ALLOW_SCRIPTS=true
-
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
@@ -33,9 +30,6 @@ COPY server/ ./
 
 # Copy .npmrc
 COPY .npmrc ./
-
-# Explicitly allow scripts via environment variable
-ENV PNPM_ALLOW_SCRIPTS=true
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
@@ -52,9 +46,6 @@ COPY server/package.json server/pnpm-lock.yaml ./
 
 # Copy .npmrc to allow build scripts
 COPY .npmrc ./
-
-# Explicitly allow scripts via environment variable
-ENV PNPM_ALLOW_SCRIPTS=true
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
