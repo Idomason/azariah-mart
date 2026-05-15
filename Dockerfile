@@ -6,8 +6,9 @@ FROM node:22-bookworm-slim AS client-build
 WORKDIR /app/client
 COPY client/ ./
 
-# Create .npmrc directly in the container to ensure scripts are allowed
-RUN echo "enable-pre-post-scripts=true" > .npmrc
+# Create .npmrc with explicit allow-list for scripts
+# This bypasses the interactive "pnpm approve-builds" prompt
+RUN echo -e "enable-pre-post-scripts=true\nallowed-scripts=true" > .npmrc
 
 # Empty = browser calls /api on the same host as the page (same domain as Express).
 ENV VITE_API_URL=
@@ -28,8 +29,8 @@ FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
 COPY server/ ./
 
-# Create .npmrc directly in the container to ensure scripts are allowed
-RUN echo "enable-pre-post-scripts=true" > .npmrc
+# Create .npmrc with explicit allow-list for scripts
+RUN echo -e "enable-pre-post-scripts=true\nallowed-scripts=true" > .npmrc
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
@@ -45,8 +46,8 @@ ENV NODE_ENV=production
 COPY server/package.json server/pnpm-lock.yaml ./
 
 
-# Create .npmrc directly in the container to ensure scripts are allowed
-RUN echo "enable-pre-post-scripts=true" > .npmrc
+  # Create .npmrc with explicit allow-list
+RUN echo -e "enable-pre-post-scripts=true\nallowed-scripts=true" > .npmrc
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
