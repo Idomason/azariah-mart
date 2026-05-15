@@ -16,7 +16,8 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm_config_only_built_dependencies="@clerk/shared" pnpm install && pnpm run build
+ENV pnpm_config_only_built_dependencies=["@clerk/shared"]
+RUN pnpm install && pnpm run build
 
 # --- Stage 2: compile the API (TypeScript → JavaScript) ---
 # Produces dist/ with index.js and the rest of the server bundle.
@@ -27,7 +28,8 @@ COPY server/ ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm_config_only_built_dependencies="@clerk/shared,@sentry-internal/node-cpu-profiler,esbuild" pnpm install && pnpm run build
+ENV pnpm_config_only_built_dependencies=["@clerk/shared","@sentry-internal/node-cpu-profiler","esbuild"]
+RUN pnpm install && pnpm run build
 
 # --- Stage 3: runtime image (only prod deps + built assets) ---
 # Express serves API routes and static files from public/ (the Vite build from stage 1).
@@ -40,6 +42,7 @@ COPY server/package.json server/pnpm-lock.yaml ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
+ENV pnpm_config_only_built_dependencies=["@clerk/shared","@sentry-internal/node-cpu-profiler"]
 RUN pnpm install --prod && pnpm cache clean --force
 
 COPY --from=server-build /app/dist ./dist
