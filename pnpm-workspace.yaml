@@ -1,0 +1,4 @@
+allowBuilds:
+  "@clerk/shared": true
+  "@sentry-internal/node-cpu-profiler": true
+  "esbuild": true
