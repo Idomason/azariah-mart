@@ -16,7 +16,7 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN echo "only-built-dependencies[]=@clerk/shared" > .npmrc
+RUN echo "only-built-dependencies=@clerk/shared" > .npmrc
 RUN pnpm install && pnpm run build
 
 # --- Stage 2: compile the API (TypeScript → JavaScript) ---
@@ -28,9 +28,7 @@ COPY server/ ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN echo "only-built-dependencies[]=@clerk/shared" >> .npmrc && \
-    echo "only-built-dependencies[]=@sentry-internal/node-cpu-profiler" >> .npmrc && \
-    echo "only-built-dependencies[] = esbuild" >> .npmrc
+RUN echo "only-built-dependencies=@clerk/shared,@sentry-internal/node-cpu-profiler,esbuild" > .npmrc
 RUN pnpm install && pnpm run build
 
 # --- Stage 3: runtime image (only prod deps + built assets) ---
@@ -44,9 +42,9 @@ COPY server/package.json server/pnpm-lock.yaml ./
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN echo "only-built-dependencies[]=@clerk/shared" >> .npmrc && \
-    echo "only-built-dependencies[]=@sentry-internal/node-cpu-profiler" >> .npmrc
+RUN echo "only-built-dependencies=@clerk/shared,@sentry-internal/node-cpu-profiler" > .npmrc
 RUN pnpm install --prod && pnpm cache clean --force
+
 
 COPY --from=server-build /app/dist ./dist
 COPY --from=client-build /app/client/dist ./public
