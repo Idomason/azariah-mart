@@ -13,6 +13,9 @@ ENV VITE_API_URL=
 ARG VITE_CLERK_PUBLISHABLE_KEY
 ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 
+# Allow build scripts
+ENV PNPM_ALLOW_SCRIPTS=true
+
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
@@ -23,6 +26,9 @@ RUN pnpm install --frozen-lockfile --allow-scripts && pnpm run build
 FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
 COPY server/ ./
+
+# Allow build scripts
+ENV PNPM_ALLOW_SCRIPTS=true
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
