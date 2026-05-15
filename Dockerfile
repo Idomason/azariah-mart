@@ -15,8 +15,8 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
-RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --ignore-scripts=false && pnpm run build
+RUN corepack prepare pnpm@9 --activate
+RUN pnpm install --no-audit --no-fund && pnpm run build
 
 # --- Stage 2: compile the API (TypeScript → JavaScript) ---
 # Produces dist/ with index.js and the rest of the server bundle.
@@ -26,8 +26,8 @@ COPY server/ ./
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
-RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --ignore-scripts=false && pnpm run build
+RUN corepack prepare pnpm@9 --activate
+RUN pnpm install --no-audit --no-fund && pnpm run build
 
 # --- Stage 3: runtime image (only prod deps + built assets) ---
 # Express serves API routes and static files from public/ (the Vite build from stage 1).
@@ -39,9 +39,8 @@ COPY server/package.json server/pnpm-lock.yaml ./
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
-RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --prod --ignore-scripts=false && pnpm cache clean --force
-
+RUN corepack prepare pnpm@9 --activate
+RUN pnpm install --omit=dev --no-audit --no-fund && pnpm cache clean --force
 
 COPY --from=server-build /app/dist ./dist
 COPY --from=client-build /app/client/dist ./public
