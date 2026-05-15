@@ -43,6 +43,9 @@ ENV NODE_ENV=production
 
 COPY server/package.json server/pnpm-lock.yaml ./
 
+# Allow build scripts
+ENV PNPM_ALLOW_SCRIPTS=true
+
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
