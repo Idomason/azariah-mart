@@ -8,6 +8,10 @@ import { getEnv } from "./lib/env";
 import { clerkWebhookHandler } from "./webhooks/clerk";
 import keepRenderServerActive from "./lib/cron";
 
+import meRouter from "./routes/auth/meRouter";
+import productRouter from "./routes/product/productRouter";
+import streamRouter from "./routes/stream/streamRouter";
+
 const env = getEnv();
 const app = express();
 const PORT = env.PORT || 8000;
@@ -25,6 +29,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(clerkMiddleware());
 
+// Routes
+app.use("/api/me", meRouter);
+app.use("/api/products", productRouter);
+app.use("/api/stream", streamRouter);
+
+// Health check endpoint
 app.get("/health", (_req: Request, res: Response) => {
   res.status(200).json({ status: "ok" });
 });
