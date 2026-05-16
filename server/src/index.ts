@@ -6,6 +6,7 @@ import express, { Request, Response } from "express";
 import { clerkMiddleware } from "@clerk/express";
 import { getEnv } from "./lib/env";
 import { clerkWebhookHandler } from "./webhooks/clerk";
+import keepRenderServerActive from "./lib/cron";
 
 const env = getEnv();
 const app = express();
@@ -23,6 +24,10 @@ app.use(cors({ origin: env.CLIENT_URL || "http://localhost:5173" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(clerkMiddleware());
+
+app.get("/health", (_req: Request, res: Response) => {
+  res.status(200).json({ status: "ok" });
+});
 
 const publicDir = path.join(process.cwd(), "public");
 if (fs.existsSync(publicDir)) {
@@ -47,4 +52,8 @@ if (fs.existsSync(publicDir)) {
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} in ${env.NODE_ENV} mode.`);
+
+  if (env.NODE_ENV === "production") {
+    keepRenderServerActive.start();
+  }
 });
