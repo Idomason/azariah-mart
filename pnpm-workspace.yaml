@@ -1,3 +1,7 @@
+packages:
+  - "client"
+  - "server"
+
 allowBuilds:
   "@clerk/shared": true
   "@sentry-internal/node-cpu-profiler": true
