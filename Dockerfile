@@ -62,8 +62,10 @@ RUN corepack prepare pnpm@latest --activate
 RUN pnpm install --prod --filter server --dangerously-allow-all-builds && pnpm store prune
 
 
-COPY --from=server-build /app/dist ./dist
-COPY --from=client-build /app/client/dist ./public
+COPY --from=server-build /app/dist ./server/dist
+COPY --from=client-build /app/client/dist ./server/public
+
+WORKDIR /app/server
 
 EXPOSE 5000
 USER node
