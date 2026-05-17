@@ -68,4 +68,4 @@ COPY --from=client-build /app/client/dist ./public
 EXPOSE 5000
 USER node
 
-CMD ["node", "--env-file=.env", "dist/index.js"]
+CMD ["node", "dist/index.js"]
