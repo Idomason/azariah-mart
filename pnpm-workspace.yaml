@@ -1,8 +1,10 @@
 packages:
-  - "client"
-  - "server"
+  - client
+  - server
 
 allowBuilds:
-  "@clerk/shared": true
-  "@sentry-internal/node-cpu-profiler": true
-  "esbuild": true
+  '@clerk/shared': true
+  '@sentry-internal/node-cpu-profiler': true
+  esbuild: true
+
+lockfile: true
