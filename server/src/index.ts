@@ -1,4 +1,4 @@
-import "dotenv/config";
+// import "dotenv/config";
 import cors from "cors";
 import fs from "node:fs";
 import path from "node:path";
