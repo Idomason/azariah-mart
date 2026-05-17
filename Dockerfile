@@ -59,7 +59,7 @@ COPY server/package.json ./server/
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --prod --dangerously-allow-all-builds && pnpm store prune
+RUN pnpm install --prod --filter server --dangerously-allow-all-builds && pnpm store prune
 
 
 COPY --from=server-build /app/dist ./dist
