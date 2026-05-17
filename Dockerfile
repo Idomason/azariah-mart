@@ -23,7 +23,7 @@ RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds && pnpm run bu
 # Produces dist/ with index.js and the rest of the server bundle.
 FROM node:22-bookworm-slim AS server-build
 WORKDIR /app
-COPY server/ ./
+COPY . .
 
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
@@ -36,7 +36,9 @@ FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-COPY server/package.json server/pnpm-lock.yaml ./
+# Copy root lockfile and workspace config
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY server/package.json ./server/
 
 
 # Use Corepack instead of npm install -g pnpm
