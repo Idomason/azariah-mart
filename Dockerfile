@@ -21,7 +21,7 @@ ENV VITE_CLERK_PUBLISHABLE_KEY=$VITE_CLERK_PUBLISHABLE_KEY
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds && pnpm run build
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 
 # Copy source and build
 COPY client/ ./
@@ -41,7 +41,7 @@ COPY server/package.json ./server/
 # Use Corepack instead of npm install -g pnpm
 RUN corepack enable
 RUN corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds && pnpm run build
+RUN pnpm install --frozen-lockfile --dangerously-allow-all-builds
 
 COPY server/ ./
 RUN pnpm run build
